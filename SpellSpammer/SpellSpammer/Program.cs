@@ -12,17 +12,14 @@ namespace SpellSpammer
     {
         private static Menu menu;
         private static CheckBox QCheckBox;
-        private static CheckBox QChampCheckBox;
+        private static ComboBox QChampCheckBox;
         private static CheckBox WCheckBox;
-        private static CheckBox WChampCheckBox;
+        private static ComboBox WChampCheckBox;
         private static CheckBox ECheckBox;
-        private static CheckBox EChampCheckBox;
+        private static ComboBox EChampCheckBox;
         private static CheckBox RCheckBox;
-        private static CheckBox RChampCheckBox;
-        private static Spell.SpellBase QSpell;
-        private static Spell.SpellBase WSpell;
-        private static Spell.SpellBase ESpell;
-        private static Spell.SpellBase RSpell;
+        private static ComboBox RChampCheckBox;
+        private static KeyBind KeyBind;
 
         static void Main()
         {
@@ -32,96 +29,196 @@ namespace SpellSpammer
         private static void Loading_OnLoadingComplete(EventArgs args)
         {
             menu = MainMenu.AddMenu("URF Spammer", "urf_spam");
-            menu.AddLabel("THIS IS FOR SPAMMING SPELLS TICKED HERE\nTHERE'S NO LOGIC FOR ANY OF THEM\n\nUSE AT YOUR OWN RISK");
-            menu.AddLabel("If spell is targeted, check the checkbox for it to be cast on nearest champion position.\nOtherwise it will be cast on you.");
-            QCheckBox = menu.Add("QSpam", new CheckBox("Spam Q (to nearest champion if targeted)", false));
-            QChampCheckBox = menu.Add("QCastOn", new CheckBox("Cast Q on nearest champion", false));
-            WCheckBox = menu.Add("WSpam", new CheckBox("Spam W (to nearest champion if targeted)", false));
-            WChampCheckBox = menu.Add("WCastOn", new CheckBox("Cast W on nearest champion", false));
-            ECheckBox = menu.Add("ESpam", new CheckBox("Spam E (to nearest champion if targeted)", false));
-            EChampCheckBox = menu.Add("ECastOn", new CheckBox("Cast E on nearest champion", false));
-            RCheckBox = menu.Add("RSpam", new CheckBox("Spam R (to nearest champion if targeted)", false));
-            RChampCheckBox = menu.Add("RCastOn", new CheckBox("Cast R on nearest champion", false));
+            menu.AddLabel("THIS IS FOR SPAMMING SPELLS TICKED HERE\nTHERE'S NO LOGIC FOR ANY OF THEM\n\nUSE AT YOUR OWN RISK", 50);
+            menu.AddSeparator();
+            KeyBind = menu.Add("keybind", new KeyBind("Toggle spam key", true, KeyBind.BindTypes.PressToggle));
+            menu.AddSeparator();
+            QCheckBox = menu.Add("QSpam", new CheckBox("Spam Q", false));
+            QChampCheckBox = menu.Add("QCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            WCheckBox = menu.Add("WSpam", new CheckBox("Spam W", false));
+            WChampCheckBox = menu.Add("WCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            ECheckBox = menu.Add("ESpam", new CheckBox("Spam E", false));
+            EChampCheckBox = menu.Add("ECastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            RCheckBox = menu.Add("RSpam", new CheckBox("Spam R", false));
+            RChampCheckBox = menu.Add("RCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
 
-            Game.OnTick += Game_OnTick;
+            Game.OnUpdate += Game_OnUpdate;
         }
 
-        private static void Game_OnTick(EventArgs args)
+        private static void Game_OnUpdate(EventArgs args)
         {
+            if (!KeyBind.CurrentValue) return;
+
             if (QCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.Q) == SpellState.Ready)
             {
-                if (QChampCheckBox.CurrentValue)
+                switch (QChampCheckBox.CurrentValue)
                 {
-                    var nearestChamp =
+                    case 0:
+                        var nearestChamp =
                         EntityManager.Heroes.Enemies.Where(
                                 x => !x.IsDead && x.Distance(Player.Instance.ServerPosition) < Player.Instance.Spellbook.GetSpell(SpellSlot.Q).SData.CastRange)
                             .OrderBy(x => x.Distance(Player.Instance.ServerPosition))
                             .FirstOrDefault();
-                    if (nearestChamp != null)
-                    {
-                        Player.Instance.Spellbook.CastSpell(SpellSlot.Q, nearestChamp);
-                    }
-                }
-                else
-                {
-                    Player.Instance.Spellbook.CastSpell(SpellSlot.Q);
+                        if (nearestChamp != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.Q, nearestChamp);
+                        }
+                        break;
+                    case 1:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.Q, Player.Instance);
+                        break;
+                    case 2:
+                        var unitsByMouse =
+                            EntityManager.Enemies.Where(
+                                    x =>
+                                        !x.IsDead &&
+                                        x.Distance(Player.Instance.ServerPosition) <
+                                        Player.Instance.Spellbook.GetSpell(SpellSlot.W).SData.CastRange && x.Distance(Game.CursorPos) < 200)
+                                .OrderBy(x => x.Distance(Game.CursorPos));
+                        if (unitsByMouse.FirstOrDefault(x => x is AIHeroClient) != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.Q, unitsByMouse.First(x => x is AIHeroClient));
+                            break;
+                        }
+                        if (unitsByMouse.FirstOrDefault() != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.Q, unitsByMouse.First());
+                            break;
+                        }
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.Q, Game.CursorPos);
+                        break;
+                    case 3:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.Q);
+                        break;
                 }
             }
             if (WCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.W) == SpellState.Ready)
             {
-                if (WChampCheckBox.CurrentValue)
+                switch (WChampCheckBox.CurrentValue)
                 {
-                    var nearestChamp =
+                    case 0:
+                        var nearestChamp =
                         EntityManager.Heroes.Enemies.Where(
                                 x => !x.IsDead && x.Distance(Player.Instance.ServerPosition) < Player.Instance.Spellbook.GetSpell(SpellSlot.W).SData.CastRange)
                             .OrderBy(x => x.Distance(Player.Instance.ServerPosition))
                             .FirstOrDefault();
-                    if (nearestChamp != null)
-                    {
-                        Player.Instance.Spellbook.CastSpell(SpellSlot.W, nearestChamp);
-                    }
-                }
-                else
-                {
-                    Player.Instance.Spellbook.CastSpell(SpellSlot.W);
+                        if (nearestChamp != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.W, nearestChamp);
+                        }
+                        break;
+                    case 1:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.W, Player.Instance);
+                        break;
+                    case 2:
+                        var unitsByMouse =
+                            EntityManager.Enemies.Where(
+                                    x =>
+                                        !x.IsDead &&
+                                        x.Distance(Player.Instance.ServerPosition) <
+                                        Player.Instance.Spellbook.GetSpell(SpellSlot.W).SData.CastRange && x.Distance(Game.CursorPos) < 200)
+                                .OrderBy(x => x.Distance(Game.CursorPos));
+                        if (unitsByMouse.FirstOrDefault(x => x is AIHeroClient) != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.W, unitsByMouse.First(x => x is AIHeroClient));
+                            break;
+                        }
+                        if (unitsByMouse.FirstOrDefault() != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.W, unitsByMouse.First());
+                            break;
+                        }
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.W, Game.CursorPos);
+                        break;
+                    case 3:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.W);
+                        break;
                 }
             }
             if (ECheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.E) == SpellState.Ready)
             {
-                if (EChampCheckBox.CurrentValue)
+                switch (EChampCheckBox.CurrentValue)
                 {
-                    var nearestChamp =
+                    case 0:
+                        var nearestChamp =
                         EntityManager.Heroes.Enemies.Where(
                                 x => !x.IsDead && x.Distance(Player.Instance.ServerPosition) < Player.Instance.Spellbook.GetSpell(SpellSlot.E).SData.CastRange)
                             .OrderBy(x => x.Distance(Player.Instance.ServerPosition))
                             .FirstOrDefault();
-                    if (nearestChamp != null)
-                    {
-                        Player.Instance.Spellbook.CastSpell(SpellSlot.E, nearestChamp);
-                    }
-                }
-                else
-                {
-                    Player.Instance.Spellbook.CastSpell(SpellSlot.E);
+                        if (nearestChamp != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.E, nearestChamp);
+                        }
+                        break;
+                    case 1:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.E, Player.Instance);
+                        break;
+                    case 2:
+                        var unitsByMouse =
+                            EntityManager.Enemies.Where(
+                                    x =>
+                                        !x.IsDead &&
+                                        x.Distance(Player.Instance.ServerPosition) <
+                                        Player.Instance.Spellbook.GetSpell(SpellSlot.W).SData.CastRange && x.Distance(Game.CursorPos) < 200)
+                                .OrderBy(x => x.Distance(Game.CursorPos));
+                        if (unitsByMouse.FirstOrDefault(x => x is AIHeroClient) != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.E, unitsByMouse.First(x => x is AIHeroClient));
+                            break;
+                        }
+                        if (unitsByMouse.FirstOrDefault() != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.E, unitsByMouse.First());
+                            break;
+                        }
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.E, Game.CursorPos);
+                        break;
+                    case 3:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.E);
+                        break;
                 }
             }
             if (RCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.R) == SpellState.Ready)
             {
-                if (RChampCheckBox.CurrentValue)
+                switch (RChampCheckBox.CurrentValue)
                 {
-                    var nearestChamp =
+                    case 0:
+                        var nearestChamp =
                         EntityManager.Heroes.Enemies.Where(
                                 x => !x.IsDead && x.Distance(Player.Instance.ServerPosition) < Player.Instance.Spellbook.GetSpell(SpellSlot.R).SData.CastRange)
                             .OrderBy(x => x.Distance(Player.Instance.ServerPosition))
                             .FirstOrDefault();
-                    if (nearestChamp != null)
-                    {
-                        Player.Instance.Spellbook.CastSpell(SpellSlot.R, nearestChamp);
-                    }
-                }
-                else
-                {
-                    Player.Instance.Spellbook.CastSpell(SpellSlot.R);
+                        if (nearestChamp != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.R, nearestChamp);
+                        }
+                        break;
+                    case 1:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.R, Player.Instance);
+                        break;
+                    case 2:
+                        var unitsByMouse =
+                            EntityManager.Enemies.Where(
+                                    x =>
+                                        !x.IsDead &&
+                                        x.Distance(Player.Instance.ServerPosition) <
+                                        Player.Instance.Spellbook.GetSpell(SpellSlot.W).SData.CastRange && x.Distance(Game.CursorPos) < 200)
+                                .OrderBy(x => x.Distance(Game.CursorPos));
+                        if (unitsByMouse.FirstOrDefault(x => x is AIHeroClient) != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.R, unitsByMouse.First(x => x is AIHeroClient));
+                            break;
+                        }
+                        if (unitsByMouse.FirstOrDefault() != null)
+                        {
+                            Player.Instance.Spellbook.CastSpell(SpellSlot.R, unitsByMouse.First());
+                            break;
+                        }
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.R, Game.CursorPos);
+                        break;
+                    case 3:
+                        Player.Instance.Spellbook.CastSpell(SpellSlot.R);
+                        break;
                 }
             }
         }
