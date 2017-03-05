@@ -34,13 +34,13 @@ namespace SpellSpammer
             KeyBind = menu.Add("keybind", new KeyBind("Toggle spam key", true, KeyBind.BindTypes.PressToggle));
             menu.AddSeparator();
             QCheckBox = menu.Add("QSpam", new CheckBox("Spam Q", false));
-            QChampCheckBox = menu.Add("QCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            QChampCheckBox = menu.Add("QCastOn", new ComboBox("Q usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
             WCheckBox = menu.Add("WSpam", new CheckBox("Spam W", false));
             WChampCheckBox = menu.Add("WCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
             ECheckBox = menu.Add("ESpam", new CheckBox("Spam E", false));
-            EChampCheckBox = menu.Add("ECastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            EChampCheckBox = menu.Add("ECastOn", new ComboBox("E usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
             RCheckBox = menu.Add("RSpam", new CheckBox("Spam R", false));
-            RChampCheckBox = menu.Add("RCastOn", new ComboBox("W usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
+            RChampCheckBox = menu.Add("RCastOn", new ComboBox("R usage: ", 3, "On nearest champion", "On self", "On mouse position", "Just cast goddammit"));
 
             Game.OnUpdate += Game_OnUpdate;
         }
