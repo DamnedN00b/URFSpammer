@@ -49,7 +49,7 @@ namespace SpellSpammer
         {
             if (!KeyBind.CurrentValue) return;
 
-            if (QCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.Q) == SpellState.Ready)
+            if (QCheckBox.CurrentValue && Player.Instance.Spellbook.GetSpell(SpellSlot.Q).IsReady)
             {
                 switch (QChampCheckBox.CurrentValue)
                 {
@@ -92,7 +92,7 @@ namespace SpellSpammer
                         break;
                 }
             }
-            if (WCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.W) == SpellState.Ready)
+            if (WCheckBox.CurrentValue && Player.Instance.Spellbook.GetSpell(SpellSlot.W).IsReady)
             {
                 switch (WChampCheckBox.CurrentValue)
                 {
@@ -135,7 +135,7 @@ namespace SpellSpammer
                         break;
                 }
             }
-            if (ECheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.E) == SpellState.Ready)
+            if (ECheckBox.CurrentValue && Player.Instance.Spellbook.GetSpell(SpellSlot.E).IsReady)
             {
                 switch (EChampCheckBox.CurrentValue)
                 {
@@ -178,7 +178,7 @@ namespace SpellSpammer
                         break;
                 }
             }
-            if (RCheckBox.CurrentValue && Player.Instance.Spellbook.CanUseSpell(SpellSlot.R) == SpellState.Ready)
+            if (RCheckBox.CurrentValue && Player.Instance.Spellbook.GetSpell(SpellSlot.R).IsReady)
             {
                 switch (RChampCheckBox.CurrentValue)
                 {
